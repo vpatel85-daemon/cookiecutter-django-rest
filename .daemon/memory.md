@@ -1,14 +1,14 @@
 # Project Memory
 
 ## Stack
-- Cookiecutter template → generates Django 5.0+ / DRF / PostgreSQL 16.4+ / Python 3.13+ REST API projects
-- Fully dockerized local dev; pytest for testing; MkDocs for docs; GitHub Actions for CI
+- **Backend template**: Cookiecutter → Django 5.0+ / DRF / PostgreSQL 16.4+ / Docker / pytest
+- **Template engine**: Cookiecutter with variables defined in `cookiecutter.json`; folder and file names contain `{{cookiecutter.*}}` placeholders that must be preserved exactly.
 
 ## Gotchas
-- This is a **template repo**, not a runnable app itself — the actual Django project lives inside `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/`. Jinja-style double-brace directory names are literal folder names on disk.
-- `cookiecutter.json` is the source of truth for all template variables; any new configurable value must be declared there first.
-- Changes to template files affect every project generated from this template — test template rendering when modifying structure.
-- `wait_for_postgres.py` is a startup helper script; it is not part of the Django app and should not import Django modules.
+- This is a **Cookiecutter template repo**, not a runnable Django project itself. The actual Django project lives inside `{{cookiecutter.github_repository_name}}/`. Any change to files inside that folder affects *generated* projects, not this repo directly.
+- Two levels of context: the template repo root (CI, cookiecutter.json) and the generated project inside the Jinja2-named directories.
+- `wait_for_postgres.py` is a startup script for docker-compose health-checking — it is not part of the Django app.
+- Settings are split across `common.py` / `local.py` / `production.py` — always check all three before modifying settings-related code.
 
-## First cycle
-Bootstrap complete.
+## History
+- First cycle: bootstrap complete.
