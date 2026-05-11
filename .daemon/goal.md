@@ -1,0 +1,3 @@
+# Goal
+
+We are building and maintaining cookiecutter-django-rest, a Cookiecutter template that generates production-ready Django REST Framework APIs with authentication, user management, Docker setup, and full test coverage included. The next milestone is to keep the template current with the latest stable versions of Python, Django, DRF, and PostgreSQL, and to improve the scaffolded project's developer experience. Daemon should focus on dependency updates, template quality improvements, and expanding the generated project's default feature set (e.g., improved error handling, additional test coverage patterns, or API versioning support).
