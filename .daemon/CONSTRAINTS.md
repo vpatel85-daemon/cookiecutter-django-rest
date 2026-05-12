@@ -1,35 +1,41 @@
 # CONSTRAINTS.md
 
-## Language & Framework
-- Python 3.13+ only. No syntax or features from earlier versions.
-- Django 5.0+ and Django REST Framework — do not downgrade or pin below these.
-- PostgreSQL 16.4+ assumed; do not use SQLite-only features.
+## Language & Framework Versions
+- Python **3.13+** only. Do not introduce syntax or libraries incompatible with 3.13.
+- Django **5.0+**. Do not use deprecated Django APIs (e.g., `ugettext`, `url()` patterns).
+- PostgreSQL **16.4+**. Do not use DB features unavailable in Postgres 16.
+
+## Cookiecutter Template Rules
+- All generated file paths and content referencing project/app names **must** use `{{cookiecutter.variable_name}}` syntax.
+- Never hardcode a concrete app name or project name inside template files.
+- `cookiecutter.json` is the source of truth for all template variables — do not introduce a new variable without adding it there first.
 
 ## Forbidden Patterns
-- Never use raw SQL unless absolutely unavoidable — use Django ORM.
-- Never hardcode secrets, credentials, or environment-specific values in any file; use env vars.
-- Never use `User.objects.create()` directly in tests — always use factory_boy factories from `test/factories.py`.
-- Do not bypass DRF serializers by writing directly to models in views.
-- Never modify or delete existing migrations — only add new ones.
+- No `print()` statements in application code — use Python `logging`.
+- No hardcoded secrets, credentials, or environment-specific URLs anywhere in the template.
+- Never use `AUTH_PASSWORD_VALIDATORS = []` or disable security middleware.
+- Do not put environment-specific settings in `config/common.py`.
+- Never commit `.env` files.
 
 ## Testing Requirements
-- Every new view, serializer, model, or permission change MUST include corresponding tests under the resource's `test/` directory.
-- Tests run with: `docker-compose run web pytest`
-- PRs without tests for new or changed logic will be rejected.
+- Every new feature or bug fix **must** include tests.
+- Tests live in `<app>/test/` with `factories.py` for fixtures and `test_<module>.py` files for assertions.
+- Run tests with: `docker-compose run --rm web pytest`
+- Do not merge code that causes existing tests to fail.
 
 ## Dependency Policy
-- Do not add new dependencies without a clear justification in the PR description.
-- All deps are managed via `pyproject.toml` — do not use `requirements.txt` as the source of truth.
-- Prefer stdlib or already-present packages before introducing new ones.
+- Do not add new Python dependencies without explicit justification in the PR description.
+- Dependencies belong in `pyproject.toml`. Do not use bare `requirements.txt` files unless already present.
+- Prefer stdlib or already-present packages over introducing new ones.
 
-## Files Requiring Special Care
-- `cookiecutter.json` — template variable definitions; changes ripple through all generated file paths.
-- `{{cookiecutter.app_name}}/config/common.py` — base settings; modifications affect all environments.
-- `.github/workflows/push.yaml` — CI pipeline; do not break the test or lint steps.
-- `pyproject.toml` — tooling config; validate after edits.
+## File & Module Discipline
+- **Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating.**
+- **New Django apps MUST be registered in `INSTALLED_APPS` in `config/common.py` and wired into `urls.py` — do not create orphaned apps or views.**
+- Migrations must be generated and committed alongside model changes.
+- Do not modify `wait_for_postgres.py` without understanding its role in Docker startup sequencing.
 
-## Structure & Naming
-- New API resources MUST mirror the `users/` structure: `models.py`, `views.py`, `serializers.py`, `permissions.py`, `migrations/`, `test/`.
-- New endpoints MUST have a corresponding doc file under `docs/api/`.
-- Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating.
-- New Django app components MUST be registered in `urls.py` and `config/common.py` — do not create orphaned apps or views.
+## Style & Naming
+- Follow PEP 8. Use snake_case for variables/functions, PascalCase for classes.
+- Serializers named `<Model>Serializer`, views named `<Model>ViewSet` or `<Model>View`.
+- Test files named `test_<module>.py`. Factory classes named `<Model>Factory`.
+- Keep `.daemon/specs/` organized — each spec gets its own subdirectory with `spec.md`, `plan.md`, `tasks.md`, `principles.md`.
