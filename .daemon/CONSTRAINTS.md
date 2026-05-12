@@ -1,36 +1,37 @@
 # CONSTRAINTS.md
 
-## Language & Framework
-- Python 3.13+ only. Do not introduce syntax or APIs unavailable in 3.13.
-- Django 5.0+ and Django REST Framework. Do not downgrade or pin below these.
-- PostgreSQL 16.4+. Do not use SQLite or other databases in any config.
+## Language & Framework Versions
+- Python **3.13+** only. Do not introduce syntax or libraries incompatible with 3.13.
+- Django **5.0+** and Django REST Framework latest stable.
+- PostgreSQL **16.4+** — do not use DB features unavailable in that version.
 
 ## Forbidden Patterns
-- Never hardcode secrets, credentials, or environment-specific values in settings files; use environment variables.
-- Never modify `common.py` settings with environment-specific overrides — use `local.py` or `production.py`.
-- Do not use `django.contrib.auth.models.User` directly; extend the custom user model already in `users/models.py`.
-- Do not add synchronous blocking calls inside async contexts.
-- Never commit `.env` files or secrets to the repository.
+- Never use `requirements.txt` for new dependency declarations — use `pyproject.toml`.
+- Never hardcode secrets, credentials, or environment-specific values in any file; use env vars.
+- Do not add `print()` debug statements to template source files.
+- Never bypass DRF serializer validation by writing directly to the DB in views.
+- Do not use deprecated Django 4.x APIs removed in 5.x.
 
 ## Testing Requirements
-- Every new view, serializer, and model change must include a corresponding test in the app's `test/` directory.
-- Use `factories.py` (factory_boy pattern) for test data — do not use raw `Model.objects.create()` in tests.
-- Run tests with: `docker-compose run --rm web pytest`
-- PRs with no test changes touching new logic will be rejected.
+- Every new view **must** have a corresponding test in the `test/` directory of its app.
+- Every new serializer **must** have serializer-level tests.
+- Use `factory_boy` factories (see `users/test/factories.py`) — never create model instances manually in tests.
+- Tests run with: `docker-compose run --rm web pytest`
+- PRs with failing or missing tests will be rejected.
 
 ## Dependency Policy
-- Do not add new dependencies without explicit justification in the PR description.
-- All dependencies must be added to `pyproject.toml`; do not use a bare `requirements.txt`.
-- Prefer stdlib or already-present packages over introducing new ones.
+- Do not add new Python dependencies without explicit justification in the PR description.
+- Prefer extending existing dependencies over introducing new ones.
+- All new deps go in `pyproject.toml`; pin to a minimum version, not an exact version.
 
-## Off-Limits / Special Care
-- `cookiecutter.json` — changes here affect every generated project; treat as a breaking-change surface.
-- `{{cookiecutter.app_name}}/users/migrations/` — never hand-edit migration files; generate with `makemigrations`.
-- `.github/workflows/push.yaml` — changes must keep CI green; test locally before modifying.
-- `wait_for_postgres.py` — do not remove; it is required for Docker startup ordering.
+## Files Requiring Special Care
+- `cookiecutter.json` — adding/removing keys is a breaking change; document in PR.
+- `{{cookiecutter.app_name}}/config/common.py` — changes affect all generated projects.
+- `{{cookiecutter.app_name}}/users/migrations/` — never edit existing migration files.
+- `.github/workflows/push.yaml` — CI changes must be tested in a branch first.
 
-## Structure & Naming
-- New Django apps must mirror the `users/` structure: `model.py`, `serializers.py`, `views.py`, `permissions.py`, `admin.py`, `test/__init__.py`, `test/factories.py`, `test/test_views.py`.
+## Naming & Style
+- Follow PEP 8; use `snake_case` for Python files, variables, and functions.
+- New Django apps mirror the `users/` structure exactly: `models.py`, `serializers.py`, `views.py`, `permissions.py`, `admin.py`, `test/`.
 - New UI components MUST be imported and rendered in a parent page or component — do not create orphaned components.
 - Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating.
-- API docs for every new resource must be added to `docs/api/`.
