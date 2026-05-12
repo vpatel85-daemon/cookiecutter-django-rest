@@ -1,14 +1,13 @@
 # Project Memory
 
 ## Stack
-- Cookiecutter template → generates Django 5.0+ / DRF REST API projects; Python 3.13+, PostgreSQL 16.4+, Docker.
-- Build tooling: `pyproject.toml`, pytest, factory_boy, docker-compose; CI via GitHub Actions.
+- Cookiecutter template → outputs Django 5.0+ / DRF / PostgreSQL 16.4+ / Docker projects.
+- Tooling: `pyproject.toml` for packaging, `pytest` + `factory_boy` for tests, GitHub Actions for CI, pyup for dependency automation.
 
 ## Gotchas
-- This is a **template repo**, not a runnable app. All meaningful source lives inside `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/` — Jinja2 braces in directory names are intentional and must be preserved exactly.
-- `cookiecutter.json` defines all template variables; changes there are breaking changes for downstream users.
-- There is no `package.json` — this is a pure Python project; do not assume Node tooling is available.
-- `wait_for_postgres.py` is a custom DB readiness script used in docker-compose startup; do not remove it.
-- Daemon specs live in `.daemon/specs/` with separate `maintenance-dependency-updates` and `maintenance-modernization` tracks.
+- This is a **template repo**, not a runnable app. Files under `{{cookiecutter.github_repository_name}}/` use Jinja2 `{{cookiecutter.*}}` syntax — never strip or escape those brackets.
+- Two layers of config: the template's own `pyproject.toml` (for cookiecutter deps) and the *generated* project's deps inside the template directory — keep them separate.
+- `wait_for_postgres.py` is wired into the Docker startup chain — removing it will break generated projects silently.
+- Specs for planned work live in `.daemon/specs/` — check there before starting any maintenance or modernization task.
 
 ## First cycle: bootstrap complete.
