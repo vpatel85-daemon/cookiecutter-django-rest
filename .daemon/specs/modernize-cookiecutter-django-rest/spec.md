@@ -1,17 +1,15 @@
 # Specification
 
-## Goal
-Modernize cookiecutter-django-rest so that teams bootstrapping a new Django REST API get a template that uses current tooling, up-to-date dependencies, and clean project structure — without having to immediately fix or upgrade anything themselves.
+## Who Benefits
+Django developers who use this template to bootstrap new REST API projects. They get a modern, well-maintained starting point that follows current best practices.
 
-## Who benefits
-Developers starting a new Django REST project who want a production-ready, low-maintenance starting point.
+## What "Done" Looks Like
+A freshly generated project from this template runs cleanly on Python 3.13 + Django 5.x, passes all CI checks, uses ruff for linting/formatting, has up-to-date pinned dependencies, and has modernized GitHub Actions workflows.
 
-## "Done" looks like
-- Generated projects use `uv` for dependency management with `pyproject.toml`
-- Django, DRF, and all supporting packages are on their latest stable versions
-- Python version is 3.13+
-- GitHub Actions CI uses modern action versions and passes on first run
-- Docker / docker-compose config is current and functional
-- MkDocs documentation config is up to date
-- Code style tooling (ruff or equivalent) replaces any legacy flake8/black setup
-- No known bugs or broken references in the template
+## Scope
+1. **Dependency updates** — update all packages in requirements files to latest compatible versions
+2. **Linting/formatting** — replace flake8 + isort + black with ruff (single tool)
+3. **CI modernization** — update GitHub Actions workflows to use latest action versions, add Python 3.13 matrix
+4. **Django/DRF modernization** — adopt any new patterns from Django 5.x and DRF (e.g. new settings, deprecated removals)
+5. **Docs** — update MkDocs config and content to reflect changes
+6. **Template hygiene** — clean up any outdated cookiecutter options or defaults
