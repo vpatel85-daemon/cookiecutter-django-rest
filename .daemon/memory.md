@@ -1,15 +1,14 @@
 # Project Memory
 
 ## Stack
-- Python 3.13+ / Django 5.0+ / Django REST Framework, PostgreSQL 16.4+, Docker + docker-compose, MkDocs, GitHub Actions CI.
-- This is a **cookiecutter template repo** — the actual Django app lives inside `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/`. Most file edits happen inside those templated directories.
+- Python 3.13+ / Django 5.0+ / Django REST Framework / PostgreSQL 16.4+ / Docker + docker-compose / pytest / MkDocs
+- Packaged via `pyproject.toml`; dependency automation via pyup (`.pyup.yml`) and GitHub Actions CI
 
 ## Gotchas
-- Paths with `{{cookiecutter.*}}` are Jinja2 template variables — they are literal directory/file names on disk, not rendered values. Treat them as such when reading or writing files.
-- There is no `package.json`; this is a pure Python project. No Node tooling.
-- `wait_for_postgres.py` is a startup health-check script used inside Docker — it is not a test file.
-- Dependency automation is handled by pyup (`.pyup.yml`) in addition to Daemon; avoid duplicate or conflicting update PRs.
-- Settings are split three ways (`common`, `local`, `production`) — always check which layer a config key belongs to before editing.
+- This is a **Cookiecutter template repo** — most source files live inside `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/`. Changes to those files affect every project generated from the template, so treat them as a high-impact surface.
+- `cookiecutter.json` defines all template variables; adding or renaming variables is a breaking change for existing users.
+- Docker is the expected dev environment; do not assume a local Python environment is set up — always use `docker-compose run --rm web <command>` for one-off commands.
+- `wait_for_postgres.py` is a required startup script wired into docker-compose; do not remove it.
+- No `package.json` — this is a pure Python project with no Node/JS build tooling.
 
-## History
-- First cycle: bootstrap complete.
+## First cycle: bootstrap complete.
