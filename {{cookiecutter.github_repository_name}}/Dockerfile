@@ -7,8 +7,8 @@ COPY ./requirements.txt requirements.txt
 RUN pip3 install --no-cache-dir --target=packages -r requirements.txt
 
 FROM base as runtime
-COPY --from=builder packages /usr/lib/python3.12/site-packages
-ENV PYTHONPATH=/usr/lib/python3.12/site-packages
+COPY --from=builder packages /usr/lib/python3.13/site-packages
+ENV PYTHONPATH=/usr/lib/python3.13/site-packages
 
 # Security Context 
 RUN useradd -m nonroot
