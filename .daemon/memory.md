@@ -1,13 +1,14 @@
 # Project Memory
 
 ## Stack
-- Cookiecutter template generating Django 5.0+ / DRF / PostgreSQL 16.4+ / Docker projects; Python 3.13+; pytest + factory_boy for testing; MkDocs for docs.
-- CI via GitHub Actions (`push.yaml`); dependency automation via pyup (`.pyup.yml`).
+- Cookiecutter template repo → generates Django 5.0+ / DRF / PostgreSQL 16.4+ / Docker projects in Python 3.13+.
+- Root repo tooling (lint, format, pytest) configured via `pyproject.toml`; generated project tooling lives inside `{{cookiecutter.github_repository_name}}/`.
 
 ## Gotchas
-- This is a **template repo**, not a runnable app itself. All application code lives under `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/` — edits to those files change what gets generated, not a live service.
-- `cookiecutter.json` is the source of truth for template variable names — renaming variables there requires updating every `{{cookiecutter.*}}` reference across all template files.
-- Multiple overlapping specs exist under `.daemon/specs/` (modernization, dependency-updates, maintenance) — check existing specs before creating new ones to avoid duplication.
-- No `package.json` — this is a pure Python/Django project with no JS build step.
+- **Double-layer structure:** the repo itself is not a Django project. All Django code lives inside the `{{cookiecutter.*}}` template directories — be careful not to confuse root-level files with generated-project files.
+- **Jinja2 path names:** file paths containing `{{cookiecutter.github_repository_name}}` and `{{cookiecutter.app_name}}` are literal directory names on disk, not rendered — Cookiecutter processes them at generation time.
+- Multiple overlapping specs exist in `.daemon/specs/` (modernization, dependency-updates, maintenance-modernization, modernize-cookiecutter-django-rest) — consolidate and avoid duplicating work across them.
+- `wait_for_postgres.py` is a custom health-check script required before Django starts in Docker; do not remove it.
 
-## First cycle: bootstrap complete.
+## First Cycle
+Bootstrap complete.
