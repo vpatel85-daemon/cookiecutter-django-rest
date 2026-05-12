@@ -1,14 +1,15 @@
 # Project Memory
 
 ## Stack
-- **Template engine:** Cookiecutter with Jinja2-style `{{cookiecutter.*}}` variables in both filenames and file contents — this is not a standard Python project, it is a *template that generates* Python projects.
-- **Generated stack:** Python 3.13+ / Django 5.0+ / DRF / PostgreSQL 16.4+ / Docker / pytest / MkDocs
+- Python 3.13+ / Django 5.0+ / Django REST Framework, PostgreSQL 16.4+, Docker + docker-compose, MkDocs, GitHub Actions CI.
+- This is a **cookiecutter template repo** — the actual Django app lives inside `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/`. Most file edits happen inside those templated directories.
 
 ## Gotchas
-- Literal double-brace directory names like `{{cookiecutter.github_repository_name}}/` are valid filesystem paths here — they are Cookiecutter template placeholders, not errors.
-- There is no `package.json` — this is a pure Python/Django project with no JavaScript frontend.
-- `wait_for_postgres.py` is a custom entrypoint health-check script; it is not a test file.
-- Settings are environment-split (`common` → `local` / `production`); never consolidate them.
-- `.pyup.yml` means dependency PRs may be opened automatically by PyUp — don't conflict with those updates.
+- Paths with `{{cookiecutter.*}}` are Jinja2 template variables — they are literal directory/file names on disk, not rendered values. Treat them as such when reading or writing files.
+- There is no `package.json`; this is a pure Python project. No Node tooling.
+- `wait_for_postgres.py` is a startup health-check script used inside Docker — it is not a test file.
+- Dependency automation is handled by pyup (`.pyup.yml`) in addition to Daemon; avoid duplicate or conflicting update PRs.
+- Settings are split three ways (`common`, `local`, `production`) — always check which layer a config key belongs to before editing.
 
-## First cycle: bootstrap complete.
+## History
+- First cycle: bootstrap complete.
