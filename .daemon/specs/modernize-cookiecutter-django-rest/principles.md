@@ -1,9 +1,12 @@
 # Principles
 
-## Non-negotiables
-- Modernize the cookiecutter-django-rest template to reflect current best practices
-- Migrate dependency management to `uv` (replacing pip-tools)
-- Keep backward compatibility in spirit: generated projects must still work out-of-the-box with Docker + PostgreSQL
-- No breaking changes to the template's public interface (cookiecutter.json variables stay stable unless there's a strong reason)
-- All changes must leave the CI (GitHub Actions) green
-- Prefer incremental, reviewable PRs over large sweeping rewrites
+## Non-Negotiables
+- Keep the project as a cookiecutter template — the generated project must be functional out of the box
+- All changes must be backward-compatible with the template rendering system (Jinja2 `{{cookiecutter.*}}` variables)
+- No breaking changes to the generated project's public API or structure without versioning
+
+## Goals
+- Modernize tooling: replace flake8/isort/black with ruff, update CI workflows
+- Update all dependencies to latest compatible versions (Python 3.13+, Django 5.x, DRF latest)
+- Improve developer experience: better docs, cleaner defaults, modern patterns
+- Maintain stability: all changes are tested and verified before merging
