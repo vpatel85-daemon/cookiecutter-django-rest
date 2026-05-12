@@ -1,40 +1,43 @@
 # CONSTRAINTS.md
 
 ## Language & Framework Versions
-- Python 3.13+ only — no compatibility shims for older versions
-- Django 5.0+ only — do not use deprecated Django APIs
-- PostgreSQL 16.4+ — do not introduce SQLite or other DB backends
+- Python **3.13+** only. No syntax or APIs deprecated before 3.13.
+- Django **5.0+** only. Do not use patterns removed in Django 4.x or earlier.
+- Django REST Framework latest stable. No DRF 2.x patterns.
+- PostgreSQL **16.4+** — do not use DB features unavailable in that version.
 
 ## Forbidden Patterns
-- Never use `%`-style or `.format()` string formatting for SQL — use ORM or parameterized queries
-- Never hardcode secrets, credentials, or environment-specific values in any settings file — use environment variables
-- Never put environment-specific config in `common.py` — use `local.py` or `production.py`
-- Never bypass DRF serializers to write directly to models in views
-- Never commit `*.pyc`, `__pycache__`, `.env` files
+- Never use `%`-style string formatting in SQL or logging — use parameterized queries or f-strings.
+- Never commit secrets, `.env` files, or credentials to the template or generated project.
+- Do not add synchronous blocking code inside async views (project may adopt async Django views).
+- Never hardcode `DEBUG=True` outside of `config/local.py`.
+- Do not bypass DRF permissions — every view must declare `permission_classes` explicitly.
 
 ## Testing Requirements
-- Every new view, serializer, or model change MUST include tests
-- Tests live in `{{cookiecutter.app_name}}/<resource>/test/` following the `users/test/` structure
-- Use factory_boy factories for test data — never raw model `.objects.create()` in tests
-- Run tests with: `docker-compose run web pytest`
-- PRs without tests for new functionality will be rejected
+- Every new view **must** have a corresponding test in `<app>/test/test_views.py`.
+- Every new serializer **must** have a corresponding test in `<app>/test/test_serializers.py`.
+- New model fixtures go in `<app>/test/factories.py` using `factory_boy`.
+- Run tests with: `docker-compose run --rm web pytest`
+- PRs must not reduce test coverage.
 
 ## Dependency Policy
-- Do not add new Python dependencies without explicit justification in the PR description
-- All dependencies must be compatible with Python 3.13+ and Django 5.0+
-- Update `pyproject.toml` if a dependency is added — do not use bare `requirements.txt` unless it already exists
+- No new `pip` dependencies without explicit justification in the PR description.
+- All dependencies must be pinned or range-pinned in `pyproject.toml`.
+- Prefer stdlib or already-present packages before adding new ones.
+- pyup manages automated updates — do not manually loosen pins without reason.
 
-## Files That Require Special Care
-- `cookiecutter.json` — changing variable names here breaks all downstream template references
-- `{{cookiecutter.app_name}}/config/production.py` — changes affect live deployments of generated projects
-- Migrations — never edit existing migrations; always generate new ones
-- `.github/workflows/push.yaml` — CI changes must be tested and justified
+## Off-Limits / Special Care Files
+- `cookiecutter.json` — changes affect all generated projects; treat as a breaking-change surface.
+- `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/users/migrations/` — never hand-edit migration files; generate via `manage.py makemigrations`.
+- `.github/workflows/push.yaml` — CI changes must be tested; do not disable steps.
+- `pyproject.toml` (root) — tooling config shared across the template repo itself.
 
-## Naming & Style Conventions
-- Follow the `users/` app as the canonical pattern for all new resource apps
-- New resource apps: `model.py`, `serializers.py`, `views.py`, `permissions.py`, `test/factories.py`, `test/test_views.py`
-- API docs required for every new resource: add a markdown file under `docs/api/`
+## Naming & Style
+- Follow PEP 8; use `ruff` for linting and formatting (configured in `pyproject.toml`).
+- New Django apps use `snake_case`; serializers/views follow DRF naming conventions (`<Resource>Serializer`, `<Resource>ViewSet`).
+- New Cookiecutter variables in `cookiecutter.json` must be `snake_case`.
 
 ## Integration Rules
-- New apps or URL routers MUST be registered in `{{cookiecutter.app_name}}/urls.py` — do not create orphaned views
-- Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating
+- **Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating.**
+- **New URL patterns MUST be registered in `urls.py` — do not create orphaned views with no route.**
+- New API endpoint groups MUST have a corresponding Markdown doc added under `docs/api/`.
