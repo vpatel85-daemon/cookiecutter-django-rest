@@ -1,14 +1,13 @@
 # Project Memory
 
 ## Stack
-- Cookiecutter template repo → generates Django 5.0+ / DRF / PostgreSQL 16.4+ / Docker projects in Python 3.13+.
-- Root repo tooling (lint, format, pytest) configured via `pyproject.toml`; generated project tooling lives inside `{{cookiecutter.github_repository_name}}/`.
+- Cookiecutter template → generates Django 5.0+ / DRF / PostgreSQL 16.4+ / Docker projects
+- Python 3.13+; pytest + factory_boy for testing; MkDocs for docs; GitHub Actions for CI
 
 ## Gotchas
-- **Double-layer structure:** the repo itself is not a Django project. All Django code lives inside the `{{cookiecutter.*}}` template directories — be careful not to confuse root-level files with generated-project files.
-- **Jinja2 path names:** file paths containing `{{cookiecutter.github_repository_name}}` and `{{cookiecutter.app_name}}` are literal directory names on disk, not rendered — Cookiecutter processes them at generation time.
-- Multiple overlapping specs exist in `.daemon/specs/` (modernization, dependency-updates, maintenance-modernization, modernize-cookiecutter-django-rest) — consolidate and avoid duplicating work across them.
-- `wait_for_postgres.py` is a custom health-check script required before Django starts in Docker; do not remove it.
+- This is a **template repo**, not a runnable app itself. Files under `{{cookiecutter.github_repository_name}}/` use Jinja2 interpolation and only become real code after `cookiecutter` runs. Always reason about both the template source and the rendered output.
+- Multiple overlapping specs exist in `.daemon/specs/` (modernization, dependency updates, maintenance). Check for duplication before starting new work — tasks may already be partially completed.
+- `cookiecutter.json` is the canonical list of template variables. Any rename there is a breaking change across the entire template.
+- Migrations under `users/migrations/` must be generated, never hand-edited.
 
-## First Cycle
-Bootstrap complete.
+## First cycle: bootstrap complete.
