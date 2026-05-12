@@ -1,43 +1,43 @@
 # Technical Plan
 
 ## Architecture
-This is a cookiecutter template repo. All changes touch files inside:
-- `{{cookiecutter.github_repository_name}}/` — the generated project root
-- `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/` — the Django app
-- `cookiecutter.json` — template variables
-- `hooks/` — pre/post generation hooks
-- `.github/workflows/` — CI for the template repo itself
+This is a cookiecutter template repo. All changes happen in two layers:
+1. **Root level** — `cookiecutter.json`, `hooks/`, root CI workflows, root docs
+2. **Template level** — `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/` and surrounding files
 
 ## Approach
 
-### 1. Dependency management → uv + pyproject.toml
-- Remove `requirements/` directory (base.txt, local.txt, production.txt)
-- Add `pyproject.toml` with `[project]` and `[tool.uv]` sections
-- Update `Dockerfile` to install `uv` and use `uv sync` instead of `pip install -r`
-- Update `docker-compose.yml` references accordingly
+### Phase 1: Dependency Updates
+- Update `requirements/base.txt`, `requirements/local.txt`, `requirements/production.txt` inside the template
+- Pin to latest compatible versions for Python 3.13 + Django 5.x
+- Remove deprecated packages, add replacements where needed
 
-### 2. Python & Django version bump
-- Pin Python to 3.13 in `Dockerfile` and `.python-version`
-- Upgrade Django to 5.x, DRF to latest, all other deps to latest stable
+### Phase 2: Linting Modernization
+- Remove `flake8`, `isort`, `black` from requirements
+- Add `ruff` with a `ruff.toml` or `pyproject.toml` config inside the template
+- Update `Makefile` lint/format targets
+- Update `.pre-commit-config.yaml` to use ruff hooks
 
-### 3. Linting/formatting → ruff
-- Remove flake8, isort, black config files (`.flake8`, `setup.cfg` linting sections)
-- Add `ruff` to dev dependencies with `pyproject.toml` config
-- Update pre-commit config if present
+### Phase 3: CI/CD Modernization
+- Update `.github/workflows/` — bump action versions (`actions/checkout@v4`, `actions/setup-python@v5`)
+- Add Python 3.13 to test matrix, drop EOL versions if any
+- Ensure Docker-based CI steps still work
 
-### 4. GitHub Actions CI modernization
-- Bump all action versions (`actions/checkout@v4`, `actions/setup-python@v5`, etc.)
-- Replace pip-tools steps with uv equivalents
-- Ensure matrix covers Python 3.13
+### Phase 4: Django/DRF Modernization
+- Update `MIDDLEWARE`, `INSTALLED_APPS`, and settings for Django 5.x compatibility
+- Remove any deprecated DRF patterns or settings
+- Update URL patterns if needed (no more `url()`)
 
-### 5. Docker / docker-compose
-- Use `docker-compose.yml` v3.9+ syntax (or drop version key per current spec)
-- Use multi-stage build in Dockerfile where appropriate
+### Phase 5: Docs & Template Hygiene
+- Update `mkdocs.yml` and docs content
+- Review `cookiecutter.json` options — remove stale ones, add useful new ones
+- Update README with new setup instructions
 
-### 6. MkDocs
-- Bump `mkdocs` and `mkdocs-material` to latest
-- Fix any broken doc references
-
-### 7. Bug fixes & cleanup
-- Fix any broken template references found during the above work
-- Remove dead code / unused files
+## Key Files
+- `{{cookiecutter.github_repository_name}}/requirements/`
+- `{{cookiecutter.github_repository_name}}/.github/workflows/`
+- `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/settings/`
+- `{{cookiecutter.github_repository_name}}/Makefile`
+- `{{cookiecutter.github_repository_name}}/.pre-commit-config.yaml`
+- `cookiecutter.json`
+- `docs/`
