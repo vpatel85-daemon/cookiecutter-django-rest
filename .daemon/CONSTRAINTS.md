@@ -1,37 +1,36 @@
 # CONSTRAINTS.md
 
 ## Language & Framework
-- Python 3.13+ only. No compatibility shims for older versions.
-- Django 5.0+ and Django REST Framework — no Flask, FastAPI, or other frameworks.
-- PostgreSQL 16.4+ is the only supported database; never use SQLite in config.
+- Python 3.13+ only. Do not introduce syntax or APIs unavailable in 3.13.
+- Django 5.0+ and Django REST Framework. Do not downgrade or pin below these.
+- PostgreSQL 16.4+. Do not use SQLite or other databases in any config.
 
 ## Forbidden Patterns
-- Never use function-based views; use DRF class-based views (`APIView`, `ModelViewSet`, etc.).
-- Never hardcode secrets, credentials, or environment-specific values in any config file.
-- Never modify `config/production.py` to reference local/dev resources.
-- Never bypass DRF serializers to write directly to models in views.
-- Never use `print()` for logging; use Python's `logging` module.
+- Never hardcode secrets, credentials, or environment-specific values in settings files; use environment variables.
+- Never modify `common.py` settings with environment-specific overrides — use `local.py` or `production.py`.
+- Do not use `django.contrib.auth.models.User` directly; extend the custom user model already in `users/models.py`.
+- Do not add synchronous blocking calls inside async contexts.
+- Never commit `.env` files or secrets to the repository.
 
 ## Testing Requirements
-- Every new view, serializer, and model change MUST have corresponding tests.
-- Tests live in `<app>/test/test_views.py` and `<app>/test/test_serializers.py`.
-- Factories for new models go in `<app>/test/factories.py`.
+- Every new view, serializer, and model change must include a corresponding test in the app's `test/` directory.
+- Use `factories.py` (factory_boy pattern) for test data — do not use raw `Model.objects.create()` in tests.
 - Run tests with: `docker-compose run --rm web pytest`
-- PRs without tests will be rejected.
+- PRs with no test changes touching new logic will be rejected.
 
 ## Dependency Policy
-- Do not add new Python packages without explicit justification in the PR description.
-- Any new dependency must also be reflected in the appropriate requirements file.
-- Do not pin to a specific patch version unless there is a known breakage reason.
+- Do not add new dependencies without explicit justification in the PR description.
+- All dependencies must be added to `pyproject.toml`; do not use a bare `requirements.txt`.
+- Prefer stdlib or already-present packages over introducing new ones.
 
-## Files Requiring Special Care
-- `cookiecutter.json` — template variable definitions; changes affect all generated projects.
-- `{{cookiecutter.app_name}}/config/common.py` — base settings inherited everywhere; changes have wide impact.
-- `{{cookiecutter.app_name}}/users/migrations/` — never hand-edit migrations; always generate via `makemigrations`.
-- `.github/workflows/push.yaml` — CI definition; breakage blocks all PRs.
+## Off-Limits / Special Care
+- `cookiecutter.json` — changes here affect every generated project; treat as a breaking-change surface.
+- `{{cookiecutter.app_name}}/users/migrations/` — never hand-edit migration files; generate with `makemigrations`.
+- `.github/workflows/push.yaml` — changes must keep CI green; test locally before modifying.
+- `wait_for_postgres.py` — do not remove; it is required for Docker startup ordering.
 
-## Naming & Style
-- App modules follow the `users/` pattern: `models.py`, `views.py`, `serializers.py`, `permissions.py`, `admin.py`, `__init__.py`, `test/`.
-- New Django apps MUST be registered in `config/common.py` `INSTALLED_APPS`.
+## Structure & Naming
+- New Django apps must mirror the `users/` structure: `model.py`, `serializers.py`, `views.py`, `permissions.py`, `admin.py`, `test/__init__.py`, `test/factories.py`, `test/test_views.py`.
 - New UI components MUST be imported and rendered in a parent page or component — do not create orphaned components.
 - Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating.
+- API docs for every new resource must be added to `docs/api/`.
