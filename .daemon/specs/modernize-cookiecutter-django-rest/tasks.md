@@ -1,107 +1,110 @@
 # Tasks
 
-## Epic: Dependency Management — uv + pyproject.toml
+## Epic: Dependency Updates
 
-### Task: Migrate to pyproject.toml with uv
-Description: Remove the `requirements/` directory (base.txt, local.txt, production.txt) from the generated project template. Create a `pyproject.toml` with `[project]`, `[project.optional-dependencies]` (dev, prod), and `[tool.uv]` sections. Pin all current deps at their latest stable versions. Add a `uv.lock` to the template.
+### Task: Audit and update base dependencies
+Description: Read `requirements/base.txt` in the template directory. Update Django to 5.x, DRF to latest, and all other packages to their latest compatible versions. Remove any packages that are no longer needed or have been superseded.
 Acceptance criteria:
-- `requirements/` directory is gone from the generated project
-- `pyproject.toml` present with all deps correctly categorised
-- `uv sync` works inside a freshly generated project
+- All packages in `requirements/base.txt` are at their latest compatible versions
+- No deprecated or abandoned packages remain
+- File is cleanly formatted with pinned versions
 Depends on:
 
-### Task: Update Dockerfile to use uv
-Description: Replace `pip install -r requirements/...txt` with `uv sync` in the generated project's `Dockerfile`. Install `uv` via the official method (`pip install uv` or copy from ghcr). Use a `.venv` inside the container or rely on uv's global install behaviour.
+### Task: Audit and update local/dev dependencies
+Description: Read `requirements/local.txt` in the template directory. Update all dev/test packages (pytest, coverage, factory-boy, etc.) to latest compatible versions.
 Acceptance criteria:
-- `docker-compose build` succeeds on a freshly generated project
-- Container starts and Django management commands work
-Depends on: migrate-to-pyproject-toml-with-uv
+- All packages in `requirements/local.txt` are at latest compatible versions
+- No conflicts with base requirements
+Depends on: Audit and update base dependencies
 
----
-
-## Epic: Python & Django Version Bump
-
-### Task: Bump Python to 3.13
-Description: Update the generated project's `Dockerfile` base image to `python:3.13-slim`. Add/update `.python-version` to `3.13`. Update `pyproject.toml` `requires-python = ">=3.13"`. Update GitHub Actions matrix to `python-version: ["3.13"]`.
+### Task: Audit and update production dependencies
+Description: Read `requirements/production.txt` in the template directory. Update gunicorn, sentry-sdk, whitenoise, and other production packages to latest versions.
 Acceptance criteria:
-- Generated project Dockerfile uses python:3.13-slim
-- CI passes with Python 3.13
-Depends on: update-dockerfile-to-use-uv
+- All packages in `requirements/production.txt` are at latest compatible versions
+Depends on: Audit and update base dependencies
 
-### Task: Upgrade Django and DRF to latest stable
-Description: In `pyproject.toml`, pin `django` to latest 5.x stable and `djangorestframework` to latest stable. Resolve any compatibility issues in the generated app code (settings, urls, models). Run the generated project's test suite to confirm.
+## Epic: Linting and Formatting Modernization
+
+### Task: Replace flake8/isort/black with ruff
+Description: Remove `flake8`, `isort`, and `black` from `requirements/local.txt`. Add `ruff` at its latest version. Create a `ruff.toml` (or add `[tool.ruff]` section to `pyproject.toml`) inside the template with sensible defaults matching the previous config. Update `Makefile` lint and format targets to use `ruff check` and `ruff format`.
 Acceptance criteria:
-- `django --version` in the container shows 5.x
-- All existing tests pass
-Depends on: bump-python-to-3-13
+- `flake8`, `isort`, `black` removed from requirements
+- `ruff` added and configured
+- `make lint` and `make format` work with ruff
+- Ruff config covers line length, import sorting, and common rule sets (E, F, I, UP)
+Depends on: Audit and update local/dev dependencies
 
-### Task: Upgrade remaining dependencies to latest stable
-Description: Audit and upgrade all other pinned packages in `pyproject.toml`: `psycopg2-binary` (or switch to `psycopg[binary]` v3), `gunicorn`, `whitenoise`, `dj-database-url`, `python-decouple`, `pytest-django`, `factory-boy`, `coverage`, `mkdocs`, `mkdocs-material`, and any others present. Resolve conflicts.
+### Task: Update pre-commit config to use ruff
+Description: Update `.pre-commit-config.yaml` inside the template to replace flake8/isort/black hooks with ruff and ruff-format hooks from `https://github.com/astral-sh/ruff-pre-commit`.
 Acceptance criteria:
-- No packages pinned to outdated versions with known CVEs or major version gaps
-- `uv sync` resolves without conflicts
-- Test suite passes
-Depends on: upgrade-django-and-drf-to-latest-stable
+- `.pre-commit-config.yaml` uses ruff hooks only (no flake8/isort/black)
+- Hook versions are pinned to latest ruff release
+Depends on: Replace flake8/isort/black with ruff
 
----
+## Epic: CI/CD Modernization
 
-## Epic: Linting & Formatting — ruff
-
-### Task: Replace flake8/black/isort with ruff
-Description: Remove flake8, black, isort from dev dependencies and delete config files (`.flake8`, any `[tool.black]`/`[tool.isort]` in `setup.cfg` or `pyproject.toml`). Add `ruff` to dev deps. Add `[tool.ruff]` and `[tool.ruff.lint]` config in `pyproject.toml` with rules equivalent to the previous setup (E, F, I). Update pre-commit config if present.
+### Task: Update GitHub Actions workflow versions
+Description: Read all workflow files in `.github/workflows/` inside the template. Bump `actions/checkout` to v4, `actions/setup-python` to v5, and any other outdated action versions. Ensure workflow syntax is current.
 Acceptance criteria:
-- `ruff check .` passes on the generated project with no errors
-- `ruff format .` produces no diffs
-- No references to flake8/black/isort remain
-Depends on: upgrade-remaining-dependencies-to-latest-stable
+- All GitHub Actions use latest major versions
+- No deprecation warnings in workflow files
+Depends on:
 
----
-
-## Epic: GitHub Actions CI Modernization
-
-### Task: Modernize GitHub Actions workflows
-Description: Update all workflow files in `.github/workflows/` (both the template repo's CI and the generated project's CI). Bump to `actions/checkout@v4`, `actions/setup-python@v5`. Replace pip-tools install steps with `uv sync`. Add `uv` caching. Ensure Python 3.13 matrix. Remove any deprecated `set-output` commands.
+### Task: Update Python version matrix in CI
+Description: Update the CI workflow to test against Python 3.11, 3.12, and 3.13. Remove any EOL Python versions (3.9 and below). Update the `python-version` matrix entries.
 Acceptance criteria:
-- CI workflow passes end-to-end on a branch
-- No deprecated action warnings
-Depends on: replace-flake8-black-isort-with-ruff
+- CI matrix includes Python 3.11, 3.12, 3.13
+- EOL versions removed
+- All matrix jobs pass
+Depends on: Update GitHub Actions workflow versions
 
----
-
-## Epic: Docker & docker-compose Cleanup
-
-### Task: Modernize docker-compose configuration
-Description: Update the generated project's `docker-compose.yml`. Drop the top-level `version:` key (deprecated in Compose v2+). Use `postgresql:16` image. Ensure healthchecks are defined for the db service. Confirm `wait_for_postgres.py` still works or replace with a compose `depends_on: condition: service_healthy`.
+### Task: Update Docker base images
+Description: Review `Dockerfile` and `docker-compose.yml` in the template. Update Python base image to `python:3.13-slim` and PostgreSQL image to `postgres:16`. Ensure all services start correctly.
 Acceptance criteria:
-- `docker compose up` starts cleanly with no deprecation warnings
-- Django app connects to Postgres on startup
-Depends on: modernize-github-actions-workflows
+- Dockerfile uses `python:3.13-slim`
+- docker-compose uses `postgres:16`
+- `docker-compose up` starts without errors
+Depends on: Audit and update base dependencies
 
----
+## Epic: Django and DRF Modernization
 
-## Epic: MkDocs & Documentation
-
-### Task: Update MkDocs configuration and dependencies
-Description: Bump `mkdocs` and `mkdocs-material` to latest stable in `pyproject.toml`. Update `mkdocs.yml` to use any renamed config keys (e.g. `theme.features`). Fix any broken internal doc links. Ensure `mkdocs build` runs clean.
+### Task: Update settings for Django 5.x compatibility
+Description: Read the settings files (`common.py`, `local.py`, `production.py`) in the template. Remove any deprecated settings, add new required settings for Django 5.x (e.g. `STORAGES`, updated `DEFAULT_AUTO_FIELD`, etc.). Check for any middleware or app ordering changes.
 Acceptance criteria:
-- `mkdocs build --strict` exits 0
-- No deprecation warnings from mkdocs
-Depends on: modernize-docker-compose-configuration
+- No Django deprecation warnings on startup
+- Settings follow Django 5.x conventions
+- `DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"` set
+Depends on: Audit and update base dependencies
 
----
-
-## Epic: Bug Fixes & Cleanup
-
-### Task: Audit and fix broken template references
-Description: Do a full pass over the cookiecutter template for broken references: incorrect `cookiecutter.*` variable names, missing files referenced in settings or urls, leftover TODO comments, and any Python syntax that's invalid under 3.13. Fix all issues found.
+### Task: Remove deprecated DRF patterns
+Description: Review DRF-related code in the template (views, serializers, routers, settings). Remove any deprecated patterns — e.g. old renderer classes, deprecated settings keys like `DEFAULT_AUTHENTICATION_CLASSES` format changes.
 Acceptance criteria:
-- `cookiecutter` renders the template without errors
-- Generated project passes `python manage.py check --deploy` (with dummy env vars)
-Depends on: update-mkdocs-configuration-and-dependencies
+- No DRF deprecation warnings
+- All DRF settings use current key names
+- Serializer and view patterns follow current DRF best practices
+Depends on: Update settings for Django 5.x compatibility
 
-### Task: Clean up legacy files and dead code
-Description: Remove files that no longer apply: `setup.cfg` (if fully replaced by pyproject.toml), `Makefile` targets that reference removed tools, any `*.pyc` or `__pycache__` entries not in `.gitignore`, and any other dead weight identified during the audit.
+## Epic: Docs and Template Hygiene
+
+### Task: Update MkDocs config and dependencies
+Description: Update `mkdocs.yml` at the repo root and in the template. Bump `mkdocs` and `mkdocs-material` to latest versions in docs requirements. Update any deprecated config keys.
 Acceptance criteria:
-- No references to removed tools anywhere in the repo
-- `git status` on a fresh clone shows no untracked junk
-Depends on: audit-and-fix-broken-template-references
+- `mkdocs build` runs without warnings
+- Docs dependencies are at latest versions
+Depends on:
+
+### Task: Refresh README and docs content
+Description: Update the root `README.md` and `docs/` content to reflect all the changes made — new Python/Django versions, ruff instead of flake8/black, updated setup instructions.
+Acceptance criteria:
+- README shows correct Python/Django version requirements
+- Setup instructions are accurate and work end-to-end
+- Ruff mentioned instead of flake8/black
+Depends on: Replace flake8/isort/black with ruff, Update MkDocs config and dependencies
+
+### Task: Review and update cookiecutter.json
+Description: Read `cookiecutter.json` at the repo root. Remove any stale options, update default values (e.g. default Python version, default Django version). Add any new useful options that reflect the modernized template.
+Acceptance criteria:
+- `cookiecutter.json` has clean, current defaults
+- No stale or unused template variables
+- Default Python version is 3.13
+Depends on: Update settings for Django 5.x compatibility
