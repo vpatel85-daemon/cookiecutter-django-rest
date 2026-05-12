@@ -1,36 +1,41 @@
 # CONSTRAINTS.md
 
-## Language & Framework Versions
-- Python 3.13+ only. No syntax or APIs deprecated before 3.13.
-- Django 5.0+. No Django 3.x/4.x-only patterns.
-- Django REST Framework must remain the API layer — do not introduce FastAPI, Flask, or alternatives.
+## Language & Framework
+- Python 3.13+ only. No syntax or features below 3.13.
+- Django 5.0+ and Django REST Framework — no downgrade.
+- PostgreSQL 16.4+ assumed; do not introduce SQLite-specific patterns.
 
 ## Forbidden Patterns
-- Never hardcode secrets, DB URLs, or environment-specific config — use environment variables via Django settings split.
-- Never modify `config/production.py` in ways that break twelve-factor app principles.
-- Do not add synchronous blocking calls inside async contexts.
-- Never use `print()` for logging — use Python's `logging` module.
-- Do not break `{{cookiecutter.*}}` template variable syntax in any template file — always validate Jinja2 brackets are intact.
+- Never use `%`-style string formatting for SQL — use parameterized queries.
+- Never hardcode secrets, credentials, or environment-specific values — use env vars via settings.
+- Do not use `print()` for logging — use Python `logging` module.
+- Never bypass DRF serializer validation by writing directly to the DB in views.
+- Do not use `requirements.txt` — dependencies are managed via `pyproject.toml`.
 
 ## Testing Requirements
-- Every new view, serializer, or model change MUST include a corresponding test in the appropriate `test/` directory.
-- Use `factory_boy` for test data — no raw `Model.objects.create()` in tests where a factory can be used.
-- Tests run via: `docker-compose run --rm web pytest`
-- CI must stay green — do not merge if `.github/workflows/push.yaml` would fail.
+- Every new feature (model, view, serializer) MUST include corresponding tests.
+- Tests live in `<app>/test/` following the existing `users/test/` pattern.
+- Run tests with: `docker-compose run --rm web pytest`
+- Do not merge code that causes existing tests to fail.
+- Use `factory_boy` factories (see `users/test/factories.py`) for test data — no raw fixture files.
 
 ## Dependency Policy
-- No new dependencies without explicit justification in the PR description.
-- All deps must be added to `pyproject.toml` — do not use a bare `requirements.txt` as source of truth.
-- pyup (`.pyup.yml`) manages automated version bumps — do not manually pin to outdated versions without a comment explaining why.
+- Do not add new dependencies without explicit justification in the PR description.
+- All new deps go in `pyproject.toml` only.
+- Prefer stdlib or already-present packages before introducing new ones.
 
 ## Off-Limits / Special Care
-- `cookiecutter.json` — changes here affect all generated projects; treat as a breaking-change surface.
-- `users/migrations/` — never hand-edit migration files; always generate via `makemigrations`.
-- `wait_for_postgres.py` — do not remove or rename; it is referenced in the Docker entrypoint.
-- `.github/workflows/push.yaml` — changes must be tested and must not break CI.
+- `cookiecutter.json` — changes here affect all generated projects; treat as a public API.
+- `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/users/migrations/` — never hand-edit migrations; generate with `makemigrations`.
+- `.github/workflows/push.yaml` — CI changes must be tested; don't break the build gate.
+- `config/production.py` — production settings are security-sensitive; changes require careful review.
 
-## Naming & Style
-- Follow PEP 8. Use `snake_case` for Python identifiers.
-- New Django apps inside the template must mirror the `users/` structure exactly.
-- New UI components MUST be imported and rendered in a parent page or component — do not create orphaned components.
+## Structure & Naming
+- New Django apps follow the `users/` pattern: model, serializer, view, permissions, urls, test/, migrations/.
+- New template features must be reflected in `cookiecutter.json` if they require a new variable.
 - Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating.
+- New UI components MUST be imported and rendered in a parent page or component — do not create orphaned components.
+
+## Style
+- Follow PEP 8. Use consistent 4-space indentation.
+- Keep settings DRY — shared config in `common.py`, environment overrides only in `local.py`/`production.py`.
