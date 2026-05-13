@@ -1,38 +1,40 @@
 # CONSTRAINTS.md
 
 ## Language & Framework
-- Python 3.13+ only. Do not introduce syntax or APIs unavailable in 3.13.
-- Django 5.0+ and Django REST Framework. No Flask, FastAPI, or other frameworks.
-- PostgreSQL 16.4+. No SQLite usage in any non-test context.
-
-## Template Layer Rules
-- Files inside `{{cookiecutter.github_repository_name}}/` are Jinja2 templates. Always preserve `{{cookiecutter.*}}` variable syntax — never hardcode values that should be templated.
-- All new template variables must be declared in `cookiecutter.json` before use anywhere.
-- Do not rename or restructure the `{{cookiecutter.github_repository_name}}/` or `{{cookiecutter.app_name}}/` directory names.
+- Python 3.13+ only. No syntax or APIs from older versions.
+- Django 5.0+ and Django REST Framework — no deprecated patterns (e.g., no `ugettext`, no `url()` in urlconf).
+- PostgreSQL 16.4+ as the only supported database — no SQLite shortcuts in any config.
 
 ## Forbidden Patterns
-- Never use `SECRET_KEY` or credentials hardcoded in any file — use environment variables.
-- Never bypass Django's ORM with raw SQL unless absolutely necessary and documented.
-- Do not use `print()` for logging — use Python's `logging` module.
-- Never use synchronous blocking calls inside async contexts.
+- Never hardcode project or app names inside template files — always use `{{cookiecutter.github_repository_name}}` and `{{cookiecutter.app_name}}`.
+- Never put secrets or environment-specific values in `config/common.py` — use `local.py` or `production.py` with env vars.
+- Never use `manage.py` shell or raw SQL in migrations — use Django ORM migrations only.
+- Do not add `print()` statements to production code — use Python `logging`.
+- Never bypass DRF serializer validation by writing directly to model instances in views.
 
 ## Testing Requirements
-- Every new view, serializer, or model must have corresponding tests in the appropriate `test/` directory.
-- Use `factory_boy` factories (defined in `test/factories.py`) — never instantiate models directly in tests.
-- Run tests with: `docker-compose run web pytest`
-- Do not merge code that causes test failures.
+- Every new view, serializer, or model change must include corresponding tests.
+- Tests live in `{{cookiecutter.app_name}}/<app>/test/` — file names must be `test_views.py`, `test_serializers.py`, etc.
+- Use factory_boy factories (defined in `test/factories.py`) — do not use raw `Model.objects.create()` in tests.
+- Run tests with: `docker-compose run --rm web pytest`
+- CI must pass before merging — see `.github/workflows/push.yaml`.
 
 ## Dependency Policy
 - Do not add new dependencies without explicit justification in the PR description.
-- All dependencies must be compatible with Python 3.13 and Django 5.0+.
-- Prefer packages already present in the template over introducing new ones.
+- All dependencies must be compatible with Python 3.13+ and Django 5.0+.
+- Dependency updates are managed by pyup (`.pyup.yml`) — do not manually pin versions without a documented reason.
 
-## File & Module Hygiene
+## File & Module Safety
+- `cookiecutter.json` — changes affect all generated projects; modify with extreme care and test generation end-to-end.
+- `.github/workflows/push.yaml` — CI changes must not break the build pipeline.
+- `config/production.py` — production settings are sensitive; no debug flags, no broad `ALLOWED_HOSTS`.
+- `.daemon/specs/` — do not delete or overwrite existing spec files; append or create new specs only.
+
+## Integration Rules
+- New Django apps MUST be registered in `INSTALLED_APPS` in `config/common.py` and wired into `urls.py` — do not create orphaned apps.
 - Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating.
-- New Django apps or serializers MUST be imported and wired into `urls.py` and settings — do not create orphaned modules.
-- `config/common.py` is high-impact; changes there affect all generated projects. Edit with care.
 
 ## Style & Naming
-- Follow PEP 8. Use snake_case for Python, kebab-case for YAML/markdown filenames.
-- App-level test files live in `<app>/test/` and are prefixed `test_` (e.g., `test_views.py`).
-- Keep settings split across `common.py`, `local.py`, `production.py` — do not consolidate.
+- Snake_case for all Python files, variables, and functions.
+- App-level test directories must have an `__init__.py`.
+- API doc files must be added to `docs/api/` and referenced in `mkdocs.yml`.
