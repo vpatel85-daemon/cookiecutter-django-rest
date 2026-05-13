@@ -1,43 +1,37 @@
 # CONSTRAINTS.md
 
-## Language & Framework
-- Python 3.13+ only. No syntax or features from older versions.
-- Django 5.0+ and Django REST Framework — no legacy patterns (e.g., no `url()`, use `path()`)
-- PostgreSQL 16.4+ assumed; do not introduce SQLite-specific behavior
-
-## Template Rules
-- Never break `{{cookiecutter.*}}` Jinja2 interpolation syntax in template files
-- Changes must produce valid, runnable output after scaffolding — test mentally both the template source AND the rendered output
-- `cookiecutter.json` is the single source of truth for template variables; do not hardcode values that should be parameterized
+## Language & Framework Versions
+- Python >= 3.13; do not use syntax or stdlib APIs removed before 3.13.
+- Django >= 5.0; Django REST Framework must stay compatible.
+- PostgreSQL >= 16.4; do not use DB features unavailable in that version.
 
 ## Forbidden Patterns
-- Never use `%`-style string formatting for Django queries — use ORM methods
-- No raw SQL unless absolutely necessary and reviewed
-- Do not add `print()` debug statements to template source files
-- Never commit secrets, tokens, or credentials — use environment variables
-- Do not use `os.environ[]` (raises on missing); use `os.environ.get()` or `django-environ`
+- Never use `requirements.txt` alone — dependency metadata lives in `pyproject.toml`.
+- No function-based Django views; use DRF class-based views or viewsets.
+- Never hardcode secrets or credentials anywhere in the template files.
+- Do not import with `import *`; always use explicit imports.
+- Never bypass migrations — schema changes must have a corresponding migration file.
+- Do not modify `cookiecutter.json` variable names without updating every template reference that uses them.
 
 ## Testing Requirements
-- Every new view, serializer, or model change MUST include corresponding tests in `<app>/test/`
-- Use factory_boy factories (see `users/test/factories.py`) for test data — no bare `Model.objects.create()` in tests
-- Run tests with: `docker-compose run web pytest`
-- All tests must pass before a PR is mergeable
+- Every new view, serializer, or model change must include corresponding tests.
+- Tests live in `<app>/test/` using pytest + factory_boy; never use Django's `TestCase` fixtures (JSON) for data setup.
+- Run tests with: `docker-compose run --rm web pytest`
+- PRs with failing tests will be rejected.
 
 ## Dependency Policy
-- Do not add new dependencies without explicit justification in the PR description
-- New deps must be added to `pyproject.toml` — do not use `requirements.txt` as the source of truth
-- Prefer stdlib or already-present libraries before pulling in new packages
+- Do not add new dependencies without explicit justification in the PR description.
+- All dependencies must be added to `pyproject.toml`; keep them pinned or range-constrained.
+- pyup manages automated updates — do not manually update deps en masse.
 
-## Off-Limits / Special Care
-- `users/migrations/` — never hand-edit migrations; generate with `makemigrations`
-- `.github/workflows/push.yaml` — CI changes require extra caution; do not break the pipeline
-- `cookiecutter.json` — variable renames cascade everywhere; treat as a breaking change
+## Files That Require Special Care
+- `cookiecutter.json` — changing variable names breaks all downstream template references.
+- `{{cookiecutter.app_name}}/config/common.py` — base settings inherited everywhere; changes affect all environments.
+- `.github/workflows/push.yaml` — CI definition; test locally before modifying.
+- `wait_for_postgres.py` — startup probe; breakage silently kills Docker startup.
 
-## Code Organization
-- New Django apps follow the `users/` module pattern: model, serializer, view, urls, test/
-- Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating
-- New UI components or template partials MUST be imported and rendered in a parent page or component — do not create orphaned components
-
-## Style
-- Follow PEP 8; use existing code style as the reference
-- Class-based views preferred (see `users/views.py`) over function-based views
+## Naming & Style
+- App packages use `snake_case`; follow the `users/` app as the canonical example.
+- Every new API resource needs a doc file under `docs/api/<resource>.md`.
+- New UI components MUST be imported and rendered in a parent page or component — do not create orphaned components.
+- Before creating a new file, search the codebase for existing files with similar purpose — extend existing files instead of duplicating.
