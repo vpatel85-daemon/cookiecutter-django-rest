@@ -1,15 +1,13 @@
 # Project Memory
 
 ## Stack
-- Python 3.13+ / Django 5.0+ / Django REST Framework, PostgreSQL 16.4+, Docker + docker-compose, MkDocs, GitHub Actions CI.
-- This is a **cookiecutter template repo** — the actual Django app lives inside `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/`. Most file edits happen inside those templated directories.
+- Cookiecutter template repo (Jinja2 variable paths) → generates Django 5.0+ / DRF / PostgreSQL 16.4+ / Python 3.13+ projects, fully dockerized.
+- Root tooling in `pyproject.toml`; generated project tooling lives inside `{{cookiecutter.github_repository_name}}/`.
 
 ## Gotchas
-- Paths with `{{cookiecutter.*}}` are Jinja2 template variables — they are literal directory/file names on disk, not rendered values. Treat them as such when reading or writing files.
-- There is no `package.json`; this is a pure Python project. No Node tooling.
-- `wait_for_postgres.py` is a startup health-check script used inside Docker — it is not a test file.
-- Dependency automation is handled by pyup (`.pyup.yml`) in addition to Daemon; avoid duplicate or conflicting update PRs.
-- Settings are split three ways (`common`, `local`, `production`) — always check which layer a config key belongs to before editing.
+- **This is a template, not a runnable app.** Files under `{{cookiecutter.github_repository_name}}/` are Jinja2 templates; `{{cookiecutter.*}}` tokens appear in both file paths and file contents. Never treat them as literal directory names when reasoning about generated output.
+- Multiple overlapping spec directories exist under `.daemon/specs/` (modernization, maintenance, dependency-updates) — check tasks.md files before starting new work to avoid duplicating effort.
+- The `.pyup.yml` handles automated dependency PRs; do not manually bump deps that pyup already manages unless there's a specific reason.
+- No `package.json` — this is a pure Python project with no JS build step.
 
-## History
-- First cycle: bootstrap complete.
+## First cycle: bootstrap complete.

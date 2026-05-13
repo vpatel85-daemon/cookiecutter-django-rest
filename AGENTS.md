@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## What This Project Does
-cookiecutter-django-rest is a project scaffolding template that generates production-ready Django REST Framework APIs. It bootstraps authentication, user accounts, tests, docs, and full Docker-based local dev in seconds. The output is a deployable, scalable REST API with best practices baked in.
+cookiecutter-django-rest is a Cookiecutter template that scaffolds production-ready Django REST Framework APIs. It generates a fully dockerized project with authentication, user accounts, tests, docs, and CI out of the box. The output is a deployable, scalable REST API with best practices baked in — users clone this repo to bootstrap new services.
 
 ## Tech Stack
 - **Language:** Python 3.13+
@@ -11,47 +11,57 @@ cookiecutter-django-rest is a project scaffolding template that generates produc
 - **Docs:** MkDocs
 - **CI:** GitHub Actions (`.github/workflows/push.yaml`)
 - **Dependency automation:** pyup (`.pyup.yml`)
+- **Testing:** pytest + pytest-django, factory_boy
 
 ## Directory Structure
 
-cookiecutter.json                          # Template input variables
-{{cookiecutter.github_repository_name}}/   # Generated project root
-  {{cookiecutter.app_name}}/               # Django app package
-    config/                                # Django settings (common, local, production)
-    users/                                 # Built-in users app (models, views, serializers, tests)
-    urls.py                                # Root URL config
-    wsgi.py                                # WSGI entry point
-  docs/                                    # MkDocs API documentation
-  conftest.py                              # pytest fixtures
-  docker-compose.yml                       # Local dev services
-  manage.py                                # Django management CLI
-  wait_for_postgres.py                     # DB readiness check script
-.daemon/specs/                             # Daemon task specs and plans
-.github/                                   # Workflows, templates, contributing guide
+cookiecutter.json                              # Template variables (inputs)
+pyproject.toml                                 # Root tooling config
+{{cookiecutter.github_repository_name}}/       # Generated project root
+  {{cookiecutter.app_name}}/                   # Django app package
+    config/                                    # Settings: common.py, local.py, production.py
+    users/                                     # Users app: models, views, serializers, permissions
+      migrations/                              # DB migrations
+      test/                                    # factories.py, test_views.py, test_serializers.py
+    urls.py                                    # Root URL config
+    wsgi.py                                    # WSGI entrypoint
+  docs/api/                                    # Markdown API docs (authentication, users)
+  docker-compose.yml                           # Local dev orchestration
+  manage.py                                    # Django management
+  conftest.py                                  # pytest root config
+.daemon/                                       # Daemon AI agent config
+.github/workflows/                             # CI pipeline
 
 
-## How to Run
+## How To Run
 bash
-# Build
-docker-compose build
+# Install template deps
+pip install -e .
 
-# Dev server
+# Run template tests (validate generated output)
+pytest
+
+# Generate a test project
+cookiecutter . --no-input
+
+# Inside generated project — start dev server
 docker-compose up
 
-# Tests
+# Inside generated project — run tests
 docker-compose run --rm web pytest
 
 
 ## Key Patterns
-- Settings split across `config/common.py`, `config/local.py`, `config/production.py` — never put env-specific config in common
-- New apps follow the `users/` pattern: models, serializers, views, permissions, and a `test/` subdirectory with factories
-- All views go through DRF; no raw Django views
-- Factories (via `factory_boy`) live in `test/factories.py` alongside tests
-- Migrations must be generated and committed with model changes
+- This is a **Cookiecutter template repo** — source files use `{{cookiecutter.*}}` Jinja2 syntax in paths and file contents. Do not treat template variables as literal strings.
+- Settings are split: `common.py` (base), `local.py` (dev), `production.py` (prod). New settings belong in the right layer.
+- All new apps inside the generated project follow the `users/` pattern: model → serializer → view → url → test.
+- Tests live in `<app>/test/` and use factory_boy factories, not fixtures.
+- Config is driven by environment variables; no hardcoded secrets anywhere.
 
-## Important Locations
-- **Config/Settings:** `{{cookiecutter.app_name}}/config/`
-- **URL routing:** `{{cookiecutter.app_name}}/urls.py`
-- **DB schema (migrations):** `{{cookiecutter.app_name}}/users/migrations/`
-- **CI pipeline:** `.github/workflows/push.yaml`
-- **Template variables:** `cookiecutter.json`
+## Where Things Live
+- **Template inputs:** `cookiecutter.json`
+- **Django settings:** `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/config/`
+- **URL routing:** `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/urls.py`
+- **DB schema:** migrations in `users/migrations/`
+- **CI config:** `.github/workflows/push.yaml`
+- **Daemon config:** `.daemon/`
