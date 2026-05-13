@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## What This Project Does
-cookiecutter-django-rest is a Cookiecutter template that scaffolds production-ready Django REST Framework APIs. It generates authentication, user accounts, tests, docs, and Docker-based local dev in seconds. The output project is deployable, scalable, and follows best practices out of the box.
+cookiecutter-django-rest is a Cookiecutter template that scaffolds production-ready Django REST Framework APIs in seconds. It generates a fully dockerized project with authentication, user accounts, tests, API docs, and CI pre-wired. The output is a deployable, scalable REST API with best practices baked in.
 
 ## Tech Stack
 - **Language:** Python 3.13+
@@ -11,26 +11,26 @@ cookiecutter-django-rest is a Cookiecutter template that scaffolds production-re
 - **Docs:** MkDocs
 - **CI:** GitHub Actions (`.github/workflows/push.yaml`)
 - **Dependency automation:** pyup (`.pyup.yml`)
-- **Testing:** pytest + pytest-django, factory_boy for fixtures
+- **Testing:** pytest + pytest-django, factory_boy
 
 ## Directory Structure
 
-cookiecutter.json                           # Template variables (app_name, repo name, etc.)
-pyproject.toml                              # Template-level tooling config
-{{cookiecutter.github_repository_name}}/    # Generated project root
-  {{cookiecutter.app_name}}/                # Django app package
-    config/                                 # Django settings: common.py, local.py, production.py
-    users/                                  # User model, serializers, views, permissions
-      migrations/                           # DB migrations
-      test/                                 # factories.py, test_views.py, test_serializers.py
-    urls.py                                 # Root URL config
-    wsgi.py                                 # WSGI entry point
-  docs/api/                                 # API docs (authentication.md, users.md)
-  docker-compose.yml                        # Local dev services
-  conftest.py                               # pytest config
-  manage.py                                 # Django management entry point
-.daemon/                                    # Daemon agent config and specs
-.github/workflows/push.yaml                 # CI pipeline
+cookiecutter.json                            # Template input variables
+pyproject.toml                               # Project/tool config for the template itself
+{{cookiecutter.github_repository_name}}/     # Generated project root
+  {{cookiecutter.app_name}}/                 # Django app package
+    config/                                  # Django settings: common.py, local.py, production.py
+    users/                                   # Users app: models, views, serializers, permissions
+      migrations/                            # DB migrations
+      test/                                  # factories.py, test_views.py, test_serializers.py
+    urls.py                                  # Root URL config
+    wsgi.py                                  # WSGI entry point
+  docs/api/                                  # Markdown API docs (authentication, users)
+  docker-compose.yml                         # Local dev services
+  manage.py                                  # Django management
+  conftest.py                                # Pytest fixtures
+  wait_for_postgres.py                       # DB readiness helper
+.daemon/specs/                               # Daemon planning specs (multiple active specs)
 
 
 ## How to Run
@@ -39,22 +39,26 @@ bash
 pip install cookiecutter
 cookiecutter https://github.com/agconti/cookiecutter-django-rest
 
-# Inside the generated project:
-docker-compose up --build        # Start dev server + PostgreSQL
-docker-compose run web pytest    # Run tests
+# Inside generated project — build and start
+docker-compose build
+docker-compose up
+
+# Run tests (inside generated project)
+docker-compose run --rm web pytest
 
 
 ## Key Patterns
-- All new Django apps follow the `users/` pattern: model → serializer → view → urls → tests → factory
-- Settings are split: `common.py` (base), `local.py` (dev overrides), `production.py` (prod overrides)
-- Tests use `factory_boy` factories defined in `test/factories.py`; never use raw model creation in tests
-- Template files use `{{cookiecutter.*}}` Jinja2 syntax — preserve this in any template-layer edits
-- Cookiecutter variables are defined in `cookiecutter.json` — add new template inputs there first
+- All settings split across `config/common.py`, `config/local.py`, `config/production.py` — never put env-specific config in common
+- New Django apps follow the `users/` structure: model → serializer → view → urls → test/factories + test_views
+- Tests use factory_boy factories (not fixtures) defined in `test/factories.py`
+- API views use DRF class-based views; permissions live in `permissions.py` per app
+- All new features must ship with corresponding API doc updates in `docs/api/`
+- Template variables use `{{cookiecutter.*}}` — never hardcode project/app names inside template files
 
-## Where Important Things Live
-- **Settings:** `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/config/`
-- **Routes:** `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/urls.py`
-- **User model/auth:** `{{cookiecutter.github_repository_name}}/{{cookiecutter.app_name}}/users/`
+## Where Things Live
+- **Settings:** `{{cookiecutter.app_name}}/config/`
+- **Routes:** `{{cookiecutter.app_name}}/urls.py`
+- **DB schema:** `{{cookiecutter.app_name}}/users/migrations/`
+- **Auth docs:** `docs/api/authentication.md`
 - **CI config:** `.github/workflows/push.yaml`
-- **Template variables:** `cookiecutter.json`
 - **Daemon specs:** `.daemon/specs/`
