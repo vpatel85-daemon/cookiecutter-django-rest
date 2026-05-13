@@ -1,14 +1,13 @@
 # Project Memory
 
 ## Stack
-- Cookiecutter template → generates Django 5.0+ / DRF / PostgreSQL 16.4+ / Docker projects; Python 3.13+.
-- CI via GitHub Actions; dependency updates via pyup; docs via MkDocs.
+- Cookiecutter template repo (Jinja2 variable paths) → generates Django 5.0+ / DRF / PostgreSQL 16.4+ / Python 3.13+ projects, fully dockerized.
+- Root tooling in `pyproject.toml`; generated project tooling lives inside `{{cookiecutter.github_repository_name}}/`.
 
 ## Gotchas
-- This is a **template repo**, not a runnable Django project itself. The actual Django code lives inside `{{cookiecutter.github_repository_name}}/` — double-check you're editing template files vs. the template wrapper.
-- Multiple overlapping specs exist in `.daemon/specs/` (modernization, dependency-updates, maintenance) — check all before starting work to avoid duplicate effort.
-- `wait_for_postgres.py` is a custom DB readiness script used in docker-compose startup; don't remove or replace it with a bare `sleep`.
-- Template variable syntax `{{cookiecutter.*}}` must be preserved exactly in file paths and file contents — Jinja2-style; breaking this breaks project generation.
+- **This is a template, not a runnable app.** Files under `{{cookiecutter.github_repository_name}}/` are Jinja2 templates; `{{cookiecutter.*}}` tokens appear in both file paths and file contents. Never treat them as literal directory names when reasoning about generated output.
+- Multiple overlapping spec directories exist under `.daemon/specs/` (modernization, maintenance, dependency-updates) — check tasks.md files before starting new work to avoid duplicating effort.
+- The `.pyup.yml` handles automated dependency PRs; do not manually bump deps that pyup already manages unless there's a specific reason.
+- No `package.json` — this is a pure Python project with no JS build step.
 
-## First cycle
-Bootstrap complete.
+## First cycle: bootstrap complete.
